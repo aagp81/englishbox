@@ -389,6 +389,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("englishbox/app")["default"].create({"name":"englishbox","version":"0.0.0+2afb000e"});
+  require("englishbox/app")["default"].create({"name":"englishbox","version":"0.0.0+3fa99946"});
 }
 //# sourceMappingURL=englishbox.map
