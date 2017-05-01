@@ -18,6 +18,14 @@ define('englishbox/app', ['exports', 'ember', 'englishbox/resolver', 'ember-load
 
   exports['default'] = App;
 });
+define('englishbox/components/flash-message', ['exports', 'ember-cli-flash/components/flash-message'], function (exports, _emberCliFlashComponentsFlashMessage) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberCliFlashComponentsFlashMessage['default'];
+    }
+  });
+});
 define('englishbox/components/welcome-page', ['exports', 'ember-welcome-page/components/welcome-page'], function (exports, _emberWelcomePageComponentsWelcomePage) {
   Object.defineProperty(exports, 'default', {
     enumerable: true,
@@ -127,6 +135,14 @@ define('englishbox/components/zf-tooltip', ['exports', 'ember-cli-foundation-6-s
     enumerable: true,
     get: function get() {
       return _emberCliFoundation6SassComponentsZfTooltip['default'];
+    }
+  });
+});
+define('englishbox/flash/object', ['exports', 'ember-cli-flash/flash/object'], function (exports, _emberCliFlashFlashObject) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberCliFlashFlashObject['default'];
     }
   });
 });
@@ -277,6 +293,56 @@ define('englishbox/initializers/export-application-global', ['exports', 'ember',
     initialize: initialize
   };
 });
+define('englishbox/initializers/flash-messages', ['exports', 'ember', 'englishbox/config/environment'], function (exports, _ember, _englishboxConfigEnvironment) {
+  exports.initialize = initialize;
+  var deprecate = _ember['default'].deprecate;
+
+  var merge = _ember['default'].assign || _ember['default'].merge;
+  var INJECTION_FACTORIES_DEPRECATION_MESSAGE = '[ember-cli-flash] Future versions of ember-cli-flash will no longer inject the service automatically. Instead, you should explicitly inject it into your Route, Controller or Component with `Ember.inject.service`.';
+  var addonDefaults = {
+    timeout: 3000,
+    extendedTimeout: 0,
+    priority: 100,
+    sticky: false,
+    showProgress: false,
+    type: 'info',
+    types: ['success', 'info', 'warning', 'danger', 'alert', 'secondary'],
+    injectionFactories: ['route', 'controller', 'view', 'component'],
+    preventDuplicates: false
+  };
+
+  function initialize() {
+    var application = arguments[1] || arguments[0];
+
+    var _ref = _englishboxConfigEnvironment['default'] || {};
+
+    var flashMessageDefaults = _ref.flashMessageDefaults;
+
+    var _ref2 = flashMessageDefaults || [];
+
+    var injectionFactories = _ref2.injectionFactories;
+
+    var options = merge(addonDefaults, flashMessageDefaults);
+    var shouldShowDeprecation = !(injectionFactories && injectionFactories.length);
+
+    application.register('config:flash-messages', options, { instantiate: false });
+    application.inject('service:flash-messages', 'flashMessageDefaults', 'config:flash-messages');
+
+    deprecate(INJECTION_FACTORIES_DEPRECATION_MESSAGE, shouldShowDeprecation, {
+      id: 'ember-cli-flash.deprecate-injection-factories',
+      until: '2.0.0'
+    });
+
+    options.injectionFactories.forEach(function (factory) {
+      application.inject(factory, 'flashMessages', 'service:flash-messages');
+    });
+  }
+
+  exports['default'] = {
+    name: 'flash-messages',
+    initialize: initialize
+  };
+});
 define('englishbox/initializers/injectStore', ['exports', 'ember'], function (exports, _ember) {
 
   /*
@@ -352,9 +418,17 @@ define('englishbox/router', ['exports', 'ember', 'englishbox/config/environment'
     rootURL: _englishboxConfigEnvironment['default'].rootURL
   });
 
-  Router.map(function () {});
+  Router.map(function () {
+    this.route('about');
+  });
 
   exports['default'] = Router;
+});
+define('englishbox/routes/about', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = _ember['default'].Route.extend({});
+});
+define('englishbox/routes/index', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = _ember['default'].Route.extend({});
 });
 define('englishbox/services/ajax', ['exports', 'ember-ajax/services/ajax'], function (exports, _emberAjaxServicesAjax) {
   Object.defineProperty(exports, 'default', {
@@ -364,8 +438,22 @@ define('englishbox/services/ajax', ['exports', 'ember-ajax/services/ajax'], func
     }
   });
 });
+define('englishbox/services/flash-messages', ['exports', 'ember-cli-flash/services/flash-messages'], function (exports, _emberCliFlashServicesFlashMessages) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberCliFlashServicesFlashMessages['default'];
+    }
+  });
+});
+define("englishbox/templates/about", ["exports"], function (exports) {
+  exports["default"] = Ember.HTMLBars.template({ "id": "vNSoLfmk", "block": "{\"statements\":[[\"text\",\"\\n\"],[\"block\",[\"zf-tabs\"],null,[[\"id\"],[\"example-tabs\"]],2],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"tabs-content\"],[\"static-attr\",\"data-tabs-content\",\"example-tabs\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"tabs-panel is-active\"],[\"static-attr\",\"id\",\"panel1\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"\\n      Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus\\n      ut eleifend nibh porttitor. Ut in nulla enim. Phasellus molestie magna non est\\n      bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus.\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"tabs-panel\"],[\"static-attr\",\"id\",\"panel2\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"\\n      Suspendisse dictum feugiat nisl ut dapibus.  Vivamus hendrerit arcu sed erat molestie\\n      vehicula. Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis\\n      nisl tempor.  Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor.\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"callout\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"About Teacher Adolf\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"\\n  The \"],[\"block\",[\"zf-tooltip\"],null,[[\"title\"],[\"Fancy word for a beetle.\"]],1],[\"text\",\" hung quite\\n  clear of any branches, and, if allowed to fall, would have fallen at our feet. Legrand\\n  immediately took the scythe, and cleared with it a circular space, three or four yards\\n  in diameter, just beneath the insect, and, having accomplished this, ordered Jupiter to\\n  let go the string and come down from the tree.\\n\"],[\"close-element\"],[\"text\",\"\\n\"],[\"block\",[\"link-to\"],[\"about\"],[[\"class\"],[\"hollow button\"]],0],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"    About us\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"scarabaeus\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"tabs vertical\"],[\"static-attr\",\"id\",\"example-tabs\"],[\"static-attr\",\"data-tabs\",\"\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"tabs-title is-active\"],[\"flush-element\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#panel1\"],[\"static-attr\",\"aria-selected\",\"true\"],[\"flush-element\"],[\"text\",\"Tab 1\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"tabs-title\"],[\"flush-element\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#panel2\"],[\"flush-element\"],[\"text\",\"Tab 2\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "englishbox/templates/about.hbs" } });
+});
 define("englishbox/templates/application", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template({ "id": "AG8KK3E7", "block": "{\"statements\":[[\"block\",[\"zf-off-canvas\"],null,[[\"showRightOffCanvas\"],[true]],4]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"\\n    \"],[\"comment\",\" Main body goes here \"],[\"text\",\"\\n\\n    \"],[\"comment\",\" Buttons to toggle off canvas \"],[\"text\",\"\\n\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"button\"],[\"static-attr\",\"data-toggle\",\"zf-off-canvas-left\"],[\"flush-element\"],[\"text\",\"Toggle Off-canvas Left\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"button\"],[\"static-attr\",\"data-toggle\",\"zf-off-canvas-right\"],[\"flush-element\"],[\"text\",\"Toggle Off-canvas Right\"],[\"close-element\"],[\"text\",\"\\n\\n  \"]],\"locals\":[]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"Example right off canvas content\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"section\",\"isOffCanvasRight\"]]],null,1,0]],\"locals\":[]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"Example left off canvas content\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"section\",\"isOffCanvasLeft\"]]],null,3,2]],\"locals\":[\"section\"]}],\"hasPartials\":false}", "meta": { "moduleName": "englishbox/templates/application.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "SpG+9M2J", "block": "{\"statements\":[[\"block\",[\"zf-off-canvas\"],null,[[\"showRightOffCanvas\"],[true]],7],[\"text\",\"\\n  \"],[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"orbit-container\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"orbit-previous\"],[\"static-attr\",\"aria-label\",\"previous\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"Previous Slide\"],[\"close-element\"],[\"text\",\"◀\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"orbit-next\"],[\"static-attr\",\"aria-label\",\"next\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"Next Slide\"],[\"close-element\"],[\"text\",\"▶\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"is-active orbit-slide\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"1: You can also throw some text in here!\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"Achieve an animation-free Orbit with the data attribute data-use-m-u-i=\\\"false\\\"\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"This Orbit slider does not use animations.\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"orbit-slide\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"2: You can also throw some text in here!\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"\\n            Lorem ipsum dolor sit amet, consectetur adipisicing elit.\\n            Unde harum rem, beatae ipsa consectetur quisquam. Rerum ratione, delectus atque\\n            tempore sed, suscipit ullam, beatae distinctio cupiditate ipsam eligendi tempora\\n            expedita.\\n          \"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"This Orbit slider does not use animations.\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"orbit-slide\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"3: You can also throw some text in here!\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"\\n            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Unde harum rem,\\n            beatae ipsa consectetur quisquam. Rerum ratione, delectus atque tempore sed,\\n            suscipit ullam, beatae distinctio cupiditate ipsam eligendi tempora expedita.\\n          \"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"This Orbit slider does not use animations.\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"orbit-slide\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"4: You can also throw some text in here!\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"\\n            Lorem ipsum dolor sit amet, consectetur adipisicing elit.\\n            Unde harum rem, beatae ipsa consectetur quisquam. Rerum ratione, delectus atque\\n            tempore sed, suscipit ullam, beatae distinctio cupiditate ipsam eligendi tempora\\n            expedita.\\n          \"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"This Orbit slider does not use animations.\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"nav\",[]],[\"static-attr\",\"class\",\"orbit-bullets\"],[\"flush-element\"],[\"text\",\"\\n     \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"is-active\"],[\"static-attr\",\"data-slide\",\"0\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"First slide details.\"],[\"close-element\"],[\"text\",\"\\n       \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"Current Slide\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n     \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"data-slide\",\"1\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"Second slide details.\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n     \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"data-slide\",\"2\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"Third slide details.\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n     \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"data-slide\",\"3\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"show-for-sr\"],[\"flush-element\"],[\"text\",\"Fourth slide details.\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n   \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"\\n    \"],[\"comment\",\" Main body goes here \"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"title-bar\"],[\"flush-element\"],[\"text\",\"\\n\\n    \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"menu\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"menu-icon\"],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"data-toggle\",\"zf-off-canvas-left\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"menu-text\"],[\"flush-element\"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"EnglishBox\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"input\",[]],[\"static-attr\",\"type\",\"search\"],[\"static-attr\",\"placeholder\",\"look for a lesson\"],[\"flush-element\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"button\"],[\"flush-element\"],[\"text\",\"Search\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"zf-orbit\"],null,[[\"nav-buttons\"],[true]],0],[\"text\",\"\\n\\n\\n  \"]],\"locals\":[]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"Example right off canvas content\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"section\",\"isOffCanvasRight\"]]],null,2,1]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"h5\",[]],[\"flush-element\"],[\"text\",\"About\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"h5\",[]],[\"flush-element\"],[\"text\",\"Lessons\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"vertical menu\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"menu-text\"],[\"static-attr\",\"data-toggle\",\"zf-off-canvas-left\"],[\"flush-element\"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Menu\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"data-toggle\",\"zf-off-canvas-left\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"link-to\"],[\"index\"],null,5],[\"text\",\"        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"data-toggle\",\"zf-off-canvas-left\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"link-to\"],[\"about\"],null,4],[\"text\",\"      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"section\",\"isOffCanvasLeft\"]]],null,6,3],[\"text\",\"\\n\"]],\"locals\":[\"section\"]}],\"hasPartials\":false}", "meta": { "moduleName": "englishbox/templates/application.hbs" } });
+});
+define("englishbox/templates/index", ["exports"], function (exports) {
+  exports["default"] = Ember.HTMLBars.template({ "id": "qk7DSeni", "block": "{\"statements\":[[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "englishbox/templates/index.hbs" } });
 });
 
 
@@ -389,6 +477,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("englishbox/app")["default"].create({"name":"englishbox","version":"0.0.0+3fa99946"});
+  require("englishbox/app")["default"].create({"name":"englishbox","version":"0.0.0+61676367"});
 }
 //# sourceMappingURL=englishbox.map

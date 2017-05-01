@@ -25,6 +25,19 @@ define('englishbox/tests/helpers/destroy-app.lint-test', ['exports'], function (
     assert.ok(true, 'helpers/destroy-app.js should pass ESLint.\n');
   });
 });
+define('englishbox/tests/helpers/flash-message', ['exports', 'ember-cli-flash/flash/object'], function (exports, _emberCliFlashFlashObject) {
+
+  _emberCliFlashFlashObject['default'].reopen({ init: function init() {} });
+});
+define('englishbox/tests/helpers/flash-message.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - helpers/flash-message.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'helpers/flash-message.js should pass ESLint.\n');
+  });
+});
 define('englishbox/tests/helpers/module-for-acceptance', ['exports', 'qunit', 'ember', 'englishbox/tests/helpers/start-app', 'englishbox/tests/helpers/destroy-app'], function (exports, _qunit, _ember, _englishboxTestsHelpersStartApp, _englishboxTestsHelpersDestroyApp) {
   var Promise = _ember['default'].RSVP.Promise;
 
@@ -122,7 +135,25 @@ define('englishbox/tests/router.lint-test', ['exports'], function (exports) {
     assert.ok(true, 'router.js should pass ESLint.\n');
   });
 });
-define('englishbox/tests/test-helper', ['exports', 'englishbox/tests/helpers/resolver', 'ember-qunit'], function (exports, _englishboxTestsHelpersResolver, _emberQunit) {
+define('englishbox/tests/routes/about.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - routes/about.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'routes/about.js should pass ESLint.\n');
+  });
+});
+define('englishbox/tests/routes/index.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - routes/index.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'routes/index.js should pass ESLint.\n');
+  });
+});
+define('englishbox/tests/test-helper', ['exports', 'englishbox/tests/helpers/resolver', 'englishbox/tests/helpers/flash-message', 'ember-qunit'], function (exports, _englishboxTestsHelpersResolver, _englishboxTestsHelpersFlashMessage, _emberQunit) {
 
   (0, _emberQunit.setResolver)(_englishboxTestsHelpersResolver['default']);
 });
@@ -133,6 +164,48 @@ define('englishbox/tests/test-helper.lint-test', ['exports'], function (exports)
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'test-helper.js should pass ESLint.\n');
+  });
+});
+define('englishbox/tests/unit/routes/about-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleFor)('route:about', 'Unit | Route | about', {
+    // Specify the other units that are required for this test.
+    // needs: ['controller:foo']
+  });
+
+  (0, _emberQunit.test)('it exists', function (assert) {
+    var route = this.subject();
+    assert.ok(route);
+  });
+});
+define('englishbox/tests/unit/routes/about-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - unit/routes/about-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/routes/about-test.js should pass ESLint.\n');
+  });
+});
+define('englishbox/tests/unit/routes/index-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleFor)('route:index', 'Unit | Route | index', {
+    // Specify the other units that are required for this test.
+    // needs: ['controller:foo']
+  });
+
+  (0, _emberQunit.test)('it exists', function (assert) {
+    var route = this.subject();
+    assert.ok(route);
+  });
+});
+define('englishbox/tests/unit/routes/index-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - unit/routes/index-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/routes/index-test.js should pass ESLint.\n');
   });
 });
 require('englishbox/tests/test-helper');

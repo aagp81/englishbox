@@ -83612,6 +83612,503 @@ define("ember-cli-app-version/utils/regexp", ["exports"], function (exports) {
   var shaRegExp = /[a-z\d]{8}/;
   exports.shaRegExp = shaRegExp;
 });
+define('ember-cli-flash/components/flash-message', ['exports', 'ember', 'ember-cli-flash/templates/components/flash-message'], function (exports, _ember, _emberCliFlashTemplatesComponentsFlashMessage) {
+  var _Ember$String = _ember['default'].String;
+  var classify = _Ember$String.classify;
+  var htmlSafe = _Ember$String.htmlSafe;
+  var Component = _ember['default'].Component;
+  var getWithDefault = _ember['default'].getWithDefault;
+  var isPresent = _ember['default'].isPresent;
+  var run = _ember['default'].run;
+  var on = _ember['default'].on;
+  var _get = _ember['default'].get;
+  var set = _ember['default'].set;
+  var computed = _ember['default'].computed;
+  var readOnly = computed.readOnly;
+  var bool = computed.bool;
+  var next = run.next;
+  var cancel = run.cancel;
+  exports['default'] = Component.extend({
+    layout: _emberCliFlashTemplatesComponentsFlashMessage['default'],
+    active: false,
+    messageStyle: 'bootstrap',
+    classNameBindings: ['alertType', 'active', 'exiting'],
+
+    showProgressBar: readOnly('flash.showProgress'),
+    exiting: readOnly('flash.exiting'),
+    hasBlock: bool('template').readOnly(),
+
+    alertType: computed('flash.type', {
+      get: function get() {
+        var flashType = getWithDefault(this, 'flash.type', '');
+        var messageStyle = getWithDefault(this, 'messageStyle', '');
+        var prefix = 'alert alert-';
+
+        if (messageStyle === 'foundation') {
+          prefix = 'alert-box ';
+        }
+
+        return '' + prefix + flashType;
+      }
+    }),
+
+    flashType: computed('flash.type', {
+      get: function get() {
+        var flashType = getWithDefault(this, 'flash.type', '');
+
+        return classify(flashType);
+      }
+    }),
+
+    _setActive: on('didInsertElement', function () {
+      var _this = this;
+
+      var pendingSet = next(this, function () {
+        set(_this, 'active', true);
+      });
+      set(this, 'pendingSet', pendingSet);
+    }),
+
+    progressDuration: computed('flash.showProgress', {
+      get: function get() {
+        if (!_get(this, 'flash.showProgress')) {
+          return false;
+        }
+
+        var duration = getWithDefault(this, 'flash.timeout', 0);
+
+        return htmlSafe('transition-duration: ' + duration + 'ms');
+      }
+    }),
+
+    click: function click() {
+      var destroyOnClick = getWithDefault(this, 'flash.destroyOnClick', true);
+
+      if (destroyOnClick) {
+        this._destroyFlashMessage();
+      }
+    },
+
+    mouseEnter: function mouseEnter() {
+      var flash = _get(this, 'flash');
+      if (isPresent(flash)) {
+        flash.deferTimers();
+      }
+    },
+
+    mouseLeave: function mouseLeave() {
+      var flash = _get(this, 'flash');
+      if (isPresent(flash)) {
+        flash.resumeTimers();
+      }
+    },
+
+    willDestroy: function willDestroy() {
+      this._super();
+      this._destroyFlashMessage();
+      cancel(_get(this, 'pendingSet'));
+    },
+
+    // private
+    _destroyFlashMessage: function _destroyFlashMessage() {
+      var flash = getWithDefault(this, 'flash', false);
+
+      if (flash) {
+        flash.destroyMessage();
+      }
+    }
+  });
+});
+define('ember-cli-flash/flash/object', ['exports', 'ember', 'ember-cli-flash/utils/computed'], function (exports, _ember, _emberCliFlashUtilsComputed) {
+  var EmberObject = _ember['default'].Object;
+  var readOnly = _ember['default'].computed.readOnly;
+  var _Ember$run = _ember['default'].run;
+  var later = _Ember$run.later;
+  var cancel = _Ember$run.cancel;
+  var Evented = _ember['default'].Evented;
+  var get = _ember['default'].get;
+  var set = _ember['default'].set;
+  exports['default'] = EmberObject.extend(Evented, {
+    timer: null,
+    exitTimer: null,
+    exiting: false,
+    initializedTime: null,
+
+    queue: readOnly('flashService.queue'),
+    totalTimeout: _emberCliFlashUtilsComputed['default'].add('timeout', 'extendedTimeout').readOnly(),
+    _guid: _emberCliFlashUtilsComputed['default'].guidFor('message').readOnly(),
+
+    init: function init() {
+      this._super.apply(this, arguments);
+
+      if (get(this, 'sticky')) {
+        return;
+      }
+
+      this._setupTimers();
+      this._setInitializedTime();
+    },
+
+    destroyMessage: function destroyMessage() {
+      var queue = get(this, 'queue');
+
+      if (queue) {
+        queue.removeObject(this);
+      }
+
+      this.destroy();
+      this.trigger('didDestroyMessage');
+    },
+
+    exitMessage: function exitMessage() {
+      set(this, 'exiting', true);
+
+      this._cancelTimer('exitTimer');
+      this.trigger('didExitMessage');
+    },
+
+    willDestroy: function willDestroy() {
+      this._cancelAllTimers();
+
+      var onDestroy = get(this, 'onDestroy');
+
+      if (onDestroy) {
+        onDestroy();
+      }
+
+      this._super.apply(this, arguments);
+    },
+
+    deferTimers: function deferTimers() {
+      if (get(this, 'sticky')) {
+        return;
+      }
+      var timeout = get(this, 'timeout');
+      var remainingTime = timeout - this._getElapsedTime();
+      set(this, 'timeout', remainingTime);
+
+      this._cancelAllTimers();
+    },
+
+    resumeTimers: function resumeTimers() {
+      if (get(this, 'sticky')) {
+        return;
+      }
+      this._setupTimers();
+    },
+
+    // private
+    _setTimer: function _setTimer(name, methodName, timeout) {
+      return set(this, name, later(this, methodName, timeout));
+    },
+
+    _setupTimers: function _setupTimers() {
+      this._setTimer('exitTimer', 'exitMessage', get(this, 'timeout'));
+      this._setTimer('timer', 'destroyMessage', get(this, 'totalTimeout'));
+    },
+
+    _setInitializedTime: function _setInitializedTime() {
+      var currentTime = new Date().getTime();
+
+      set(this, 'initializedTime', currentTime);
+    },
+
+    _getElapsedTime: function _getElapsedTime() {
+      var currentTime = new Date().getTime();
+      var initializedTime = get(this, 'initializedTime');
+
+      return currentTime - initializedTime;
+    },
+
+    _cancelTimer: function _cancelTimer(name) {
+      var timer = get(this, name);
+
+      if (timer) {
+        cancel(timer);
+        set(this, name, null);
+      }
+    },
+
+    _cancelAllTimers: function _cancelAllTimers() {
+      var _this = this;
+
+      var timers = ['timer', 'exitTimer'];
+
+      timers.forEach(function (timer) {
+        _this._cancelTimer(timer);
+      });
+    }
+  });
+});
+define('ember-cli-flash/services/flash-messages', ['exports', 'ember', 'ember-cli-flash/flash/object', 'ember-cli-flash/utils/object-without'], function (exports, _ember, _emberCliFlashFlashObject, _emberCliFlashUtilsObjectWithout) {
+  var Service = _ember['default'].Service;
+  var assert = _ember['default'].assert;
+  var copy = _ember['default'].copy;
+  var getWithDefault = _ember['default'].getWithDefault;
+  var isNone = _ember['default'].isNone;
+  var setProperties = _ember['default'].setProperties;
+  var typeOf = _ember['default'].typeOf;
+  var warn = _ember['default'].warn;
+  var get = _ember['default'].get;
+  var set = _ember['default'].set;
+  var computed = _ember['default'].computed;
+  var classify = _ember['default'].String.classify;
+  var emberArray = _ember['default'].A;
+  var equal = computed.equal;
+  var sort = computed.sort;
+  var mapBy = computed.mapBy;
+
+  var merge = _ember['default'].assign || _ember['default'].merge;
+
+  exports['default'] = Service.extend({
+    isEmpty: equal('queue.length', 0).readOnly(),
+    _guids: mapBy('queue', '_guid').readOnly(),
+
+    arrangedQueue: sort('queue', function (a, b) {
+      if (a.priority < b.priority) {
+        return 1;
+      } else if (a.priority > b.priority) {
+        return -1;
+      }
+      return 0;
+    }).readOnly(),
+
+    init: function init() {
+      this._super.apply(this, arguments);
+      this._setDefaults();
+      this.queue = emberArray();
+    },
+
+    add: function add() {
+      var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      this._enqueue(this._newFlashMessage(options));
+
+      return this;
+    },
+
+    clearMessages: function clearMessages() {
+      var flashes = get(this, 'queue');
+
+      if (isNone(flashes)) {
+        return;
+      }
+
+      flashes.clear();
+
+      return this;
+    },
+
+    registerTypes: function registerTypes() {
+      var _this = this;
+
+      var types = arguments.length <= 0 || arguments[0] === undefined ? emberArray() : arguments[0];
+
+      types.forEach(function (type) {
+        return _this._registerType(type);
+      });
+
+      return this;
+    },
+
+    peekFirst: function peekFirst() {
+      return get(this, 'queue.firstObject');
+    },
+
+    peekLast: function peekLast() {
+      return get(this, 'queue.lastObject');
+    },
+
+    getFlashObject: function getFlashObject() {
+      var errorText = 'A flass message must be added before it can be returned';
+      assert(errorText, get(this, 'queue').length);
+
+      return this.peekLast();
+    },
+
+    _newFlashMessage: function _newFlashMessage() {
+      var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      assert('The flash message cannot be empty.', options.message);
+
+      var flashService = this;
+      var allDefaults = getWithDefault(this, 'flashMessageDefaults', {});
+      var defaults = (0, _emberCliFlashUtilsObjectWithout['default'])(allDefaults, ['types', 'injectionFactories', 'preventDuplicates']);
+
+      var flashMessageOptions = merge(copy(defaults), { flashService: flashService });
+
+      for (var key in options) {
+        var value = get(options, key);
+        var option = this._getOptionOrDefault(key, value);
+
+        set(flashMessageOptions, key, option);
+      }
+
+      return _emberCliFlashFlashObject['default'].create(flashMessageOptions);
+    },
+
+    _getOptionOrDefault: function _getOptionOrDefault(key, value) {
+      var defaults = getWithDefault(this, 'flashMessageDefaults', {});
+      var defaultOption = get(defaults, key);
+
+      if (typeOf(value) === 'undefined') {
+        return defaultOption;
+      }
+
+      return value;
+    },
+
+    _setDefaults: function _setDefaults() {
+      var defaults = getWithDefault(this, 'flashMessageDefaults', {});
+
+      for (var key in defaults) {
+        var classifiedKey = classify(key);
+        var defaultKey = 'default' + classifiedKey;
+
+        set(this, defaultKey, defaults[key]);
+      }
+
+      this.registerTypes(getWithDefault(this, 'defaultTypes', emberArray()));
+    },
+
+    _registerType: function _registerType(type) {
+      var _this2 = this;
+
+      assert('The flash type cannot be undefined', type);
+
+      this[type] = function (message) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var flashMessageOptions = copy(options);
+        setProperties(flashMessageOptions, { message: message, type: type });
+
+        return _this2.add(flashMessageOptions);
+      };
+    },
+
+    _hasDuplicate: function _hasDuplicate(guid) {
+      return get(this, '_guids').includes(guid);
+    },
+
+    _enqueue: function _enqueue(flashInstance) {
+      var preventDuplicates = get(this, 'defaultPreventDuplicates');
+      var guid = get(flashInstance, '_guid');
+
+      if (preventDuplicates && this._hasDuplicate(guid)) {
+        warn('Attempting to add a duplicate message to the Flash Messages Service', false, {
+          id: 'ember-cli-flash.duplicate-message'
+        });
+        return;
+      }
+
+      return get(this, 'queue').pushObject(flashInstance);
+    }
+  });
+});
+define("ember-cli-flash/templates/components/flash-message", ["exports"], function (exports) {
+  exports.default = Ember.HTMLBars.template({ "id": "Siec3zJt", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"has-block\",\"default\"]],null,2,1]],\"locals\":[],\"named\":[],\"yields\":[\"default\"],\"blocks\":[{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"alert-progress\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"alert-progressBar\"],[\"dynamic-attr\",\"style\",[\"unknown\",[\"progressDuration\"]],null],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"append\",[\"unknown\",[\"flash\",\"message\"]],false],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"showProgressBar\"]]],null,0]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"yield\",\"default\",[[\"get\",[null]],[\"get\",[\"flash\"]]]],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "ember-cli-flash/templates/components/flash-message.hbs" } });
+});
+define('ember-cli-flash/utils/computed', ['exports', 'ember'], function (exports, _ember) {
+  exports.add = add;
+  exports.guidFor = guidFor;
+  var typeOf = _ember['default'].typeOf;
+  var _get = _ember['default'].get;
+  var computed = _ember['default'].computed;
+  var emberGuidFor = _ember['default'].guidFor;
+  var emberArray = _ember['default'].A;
+
+  function add() {
+    for (var _len = arguments.length, dependentKeys = Array(_len), _key = 0; _key < _len; _key++) {
+      dependentKeys[_key] = arguments[_key];
+    }
+
+    var computedFunc = computed({
+      get: function get() {
+        var _this = this;
+
+        var values = dependentKeys.map(function (dependentKey) {
+          var value = _get(_this, dependentKey);
+
+          if (typeOf(value) !== 'number') {
+            return;
+          }
+
+          return value;
+        });
+
+        return emberArray(values).compact().reduce(function (prev, curr) {
+          return prev + curr;
+        });
+      }
+    });
+
+    return computedFunc.property.apply(computedFunc, dependentKeys);
+  }
+
+  function guidFor(dependentKey) {
+    return computed(dependentKey, {
+      get: function get() {
+        var value = _get(this, dependentKey);
+
+        return emberGuidFor(value.toString());
+      }
+    });
+  }
+});
+define('ember-cli-flash/utils/object-compact', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = objectCompact;
+  var isPresent = _ember['default'].isPresent;
+
+  function objectCompact(objectInstance) {
+    var compactedObject = {};
+
+    for (var key in objectInstance) {
+      var value = objectInstance[key];
+
+      if (isPresent(value)) {
+        compactedObject[key] = value;
+      }
+    }
+
+    return compactedObject;
+  }
+});
+define("ember-cli-flash/utils/object-only", ["exports"], function (exports) {
+  exports["default"] = objectWithout;
+
+  function objectWithout() {
+    var originalObj = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var keysToRemain = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+
+    var newObj = {};
+
+    for (var key in originalObj) {
+      if (keysToRemain.indexOf(key) !== -1) {
+        newObj[key] = originalObj[key];
+      }
+    }
+
+    return newObj;
+  }
+});
+define("ember-cli-flash/utils/object-without", ["exports"], function (exports) {
+  exports["default"] = objectWithout;
+
+  function objectWithout() {
+    var originalObj = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var keysToRemove = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+
+    var newObj = {};
+
+    for (var key in originalObj) {
+      if (keysToRemove.indexOf(key) === -1) {
+        newObj[key] = originalObj[key];
+      }
+    }
+
+    return newObj;
+  }
+});
 define('ember-cli-foundation-6-sass/components/zf-accordion-menu', ['exports', 'ember', 'ember-cli-foundation-6-sass/mixins/zf-widget'], function (exports, _ember, _emberCliFoundation6SassMixinsZfWidget) {
   exports['default'] = _ember['default'].Component.extend(_emberCliFoundation6SassMixinsZfWidget['default'], {
 
