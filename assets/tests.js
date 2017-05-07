@@ -117,6 +117,15 @@ define('englishbox/tests/helpers/start-app.lint-test', ['exports'], function (ex
     assert.ok(true, 'helpers/start-app.js should pass ESLint.\n');
   });
 });
+define('englishbox/tests/models/image.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - models/image.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'models/image.js should pass ESLint.\n');
+  });
+});
 define('englishbox/tests/resolver.lint-test', ['exports'], function (exports) {
   'use strict';
 
@@ -164,6 +173,28 @@ define('englishbox/tests/test-helper.lint-test', ['exports'], function (exports)
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'test-helper.js should pass ESLint.\n');
+  });
+});
+define('englishbox/tests/unit/models/image-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleForModel)('image', 'Unit | Model | image', {
+    // Specify the other units that are required for this test.
+    needs: []
+  });
+
+  (0, _emberQunit.test)('it exists', function (assert) {
+    var model = this.subject();
+    // let store = this.store();
+    assert.ok(!!model);
+  });
+});
+define('englishbox/tests/unit/models/image-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - unit/models/image-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/models/image-test.js should pass ESLint.\n');
   });
 });
 define('englishbox/tests/unit/routes/about-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
